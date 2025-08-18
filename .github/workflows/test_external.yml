@@ -34,7 +34,7 @@ jobs:
           --health-interval=10s --health-timeout=5s --health-retries=10
 
     env:
-      DB_HOST: db           # << clave: usar el hostname del service
+      DB_HOST: db
       DB_PORT: 5432
       PGUSER: odoo
       PGPASSWORD: odoo
@@ -46,10 +46,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      #- name: Fix perms for non-root
-      #  run: |
-      #    chown -R odoo:odoo "$GITHUB_WORKSPACE" /var/lib/odoo || true
 
       - name: Prepare Odoo data dir
         run: |
@@ -74,14 +70,12 @@ jobs:
         run: |
           su -s /bin/bash -c 'odoo \
             -d odoo \
-            --db_host="$PG_HOME" \
-            --db_port="$PGPORT" \
+            --db_host="$DB_HOST" \
+            --db_port="$DB_PORT" \
             --db_user="$PGUSER" \
             --db_password="$PGPASSWORD" \
             --data-dir="$DATA_DIR" \
             --without-demo=False \
-            --log-level=debug \
-            --logfile="$RUNNER_TEMP/odoo.log" \
             &'
 
       - name: Wait for Odoo to be ready
