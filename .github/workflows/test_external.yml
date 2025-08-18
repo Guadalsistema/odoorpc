@@ -38,10 +38,10 @@ jobs:
         run: |
           chown -R odoo:odoo "$GITHUB_WORKSPACE" /var/lib/odoo || true
 
-      - name: Export PG bindir to PATH
-        run: |
-          PG_BINDIR=$(ls -d /usr/lib/postgresql/*/bin | head -1)
-          echo "$PG_BINDIR" >> "$GITHUB_PATH"
+      #- name: Export PG bindir to PATH
+      #  run: |
+      #    PG_BINDIR=$(ls -d /usr/lib/postgresql/*/bin | head -1)
+      #    echo "$PG_BINDIR" >> "$GITHUB_PATH"
 
       # ---------- PostgreSQL ephemeral ----------
       - name: Init & start local PostgreSQL (pg_ctl)
