@@ -1,0 +1,23 @@
+name: Tags
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - '**/*.md'
+
+permissions:
+  contents: write
+
+jobs:
+  test_local:
+    uses: ./.github/workflows/test_local.yml
+  test_external:
+    needs: test_local
+    uses: ./.github/workflows/test_external.yml
+  tag:
+    needs: test_external
+    uses: ./.github/workflows/tag.yml

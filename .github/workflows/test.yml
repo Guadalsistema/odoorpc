@@ -1,0 +1,16 @@
+name: Test
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - '**/*.md'
+
+jobs:
+  test_local:
+    uses: ./.github/workflows/test_local.yml
+  test_external:
+    needs: test_local
+    uses: ./.github/workflows/test_external.yml
