@@ -37,11 +37,6 @@ jobs:
       - name: Fix perms for non-root
         run: |
           chown -R odoo:odoo "$GITHUB_WORKSPACE" /var/lib/odoo || true
-      - name: Run tests as odoo user
-        run: |
-          su -s /bin/bash -c 'odoo \
-            --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo \
-            -d odoo -i my_module --test-enable --stop-after-init --without-demo=all' odoo
 
       - name: Export PG bindir to PATH
         run: |
@@ -79,7 +74,7 @@ jobs:
 
       - name: Install base packages in Odoo
         run: |
-          odoo \
+          su -s /bin/bash -c 'odoo \
             -d odoo \
             --db_host="$PG_HOME" \
             --db_port="$PGPORT" \
@@ -88,11 +83,11 @@ jobs:
             --data-dir="$DATA_DIR" \
             -i base \
             --without-demo=False \
-            --stop-after-init
+            --stop-after-init'
 
       - name: Start Odoo in background
         run: |
-          odoo \
+          su -s /bin/bash -c 'odoo \
             -d odoo \
             --db_host="$PG_HOME" \
             --db_port="$PGPORT" \
@@ -102,8 +97,7 @@ jobs:
             --without-demo=False \
             --log-level=debug \
             --logfile="$RUNNER_TEMP/odoo.log" \
-            &
-          echo $! > odoo.pid
+            &'
 
       - name: Wait for Odoo to be ready
         run: |
@@ -123,11 +117,6 @@ jobs:
 
       - name: Test
         run: go test -v -tags "odoo_external" ./...
-
-      - name: Stop Odoo
-        if: always()
-        run: |
-          kill $(cat odoo.pid) || true
 
       # ---------- Shutdown ----------
       - name: Stop PostgreSQL
