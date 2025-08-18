@@ -1,16 +1,27 @@
 name: Test External
+
 on:
-  workflow_call:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '**/*.md'
+
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '**/*.md'
 
 jobs:
-
   test:
-    name: Odoo tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [odoo-16, odoo-17, odoo-18]
+    runs-on: ubuntu-latest
+    container:
+      image: odoo:17.0
+      options: >-
+        --user=1000:1000
+        --network-alias=odoo
 
     env:
       PGUSER: odoo
@@ -108,13 +119,6 @@ jobs:
         if: always()
         run: |
           kill $(cat odoo.pid) || true
-
-      - name: Upload Odoo log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: odoo-log-${{ matrix.os }}
-          path: ${{ runner.temp }}/odoo.log
 
       # ---------- Shutdown ----------
       - name: Stop PostgreSQL
