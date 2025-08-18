@@ -5,6 +5,8 @@ package odoorpc_test
 import (
 	"context"
 	"testing"
+
+	"github.com/Guadalsistema/odoorpc"
 )
 
 // TestRPCClientCallAgainstOdoo verifies that RPCClient.Call works with a real Odoo server.
