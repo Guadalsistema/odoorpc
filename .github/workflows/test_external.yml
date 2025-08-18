@@ -1,18 +1,7 @@
 name: Test External
 
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - '**/*.md'
-
-  pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - '**/*.md'
+  workflow_call:
 
 jobs:
   test:
@@ -96,4 +85,3 @@ jobs:
 
       - name: Test
         run: go test -v -tags "odoo_external" ./...
-
