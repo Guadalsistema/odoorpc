@@ -3,13 +3,10 @@ package jsonrpc
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"log/slog"
 )
 
 type testResult struct {
@@ -18,11 +15,11 @@ type testResult struct {
 
 func TestClientCall(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var req map[string]interface{}
+		var req map[string]any
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			t.Fatalf("decode: %v", err)
 		}
-		resp := map[string]interface{}{
+		resp := map[string]any{
 			"jsonrpc": "2.0",
 			"id":      req["id"],
 			"result":  testResult{Value: "ok"},
@@ -31,8 +28,7 @@ func TestClientCall(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	c := New(srv.URL, srv.Client(), logger)
+	c := New(srv.URL, srv.Client())
 	var res testResult
 	if err := c.Call(context.Background(), "test", nil, &res); err != nil {
 		t.Fatalf("Call failed: %v", err)
@@ -44,7 +40,7 @@ func TestClientCall(t *testing.T) {
 
 func TestNewEnsuresSuffixAndJar(t *testing.T) {
 	httpClient := &http.Client{}
-	c := New("http://example.com", httpClient, nil)
+	c := New("http://example.com", httpClient)
 	if !strings.HasSuffix(c.endpoint, "/jsonrpc") {
 		t.Fatalf("expected endpoint to end with /jsonrpc got %s", c.endpoint)
 	}
@@ -59,8 +55,7 @@ func TestCallHTTPError(t *testing.T) {
 		w.Write([]byte("bad"))
 	}))
 	defer srv.Close()
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	c := New(srv.URL, srv.Client(), logger)
+	c := New(srv.URL, srv.Client())
 	if err := c.Call(context.Background(), "method", nil, nil); err == nil {
 		t.Fatalf("expected error")
 	}
@@ -79,8 +74,7 @@ func TestCallRPCError(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	c := New(srv.URL, srv.Client(), logger)
+	c := New(srv.URL, srv.Client())
 	if err := c.Call(context.Background(), "m", nil, nil); err == nil {
 		t.Fatalf("expected rpc error")
 	}
@@ -91,8 +85,7 @@ func TestCallInvalidJSON(t *testing.T) {
 		w.Write([]byte("not-json"))
 	}))
 	defer srv.Close()
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	c := New(srv.URL, srv.Client(), logger)
+	c := New(srv.URL, srv.Client())
 	if err := c.Call(context.Background(), "m", nil, nil); err == nil {
 		t.Fatalf("expected decode error")
 	}
