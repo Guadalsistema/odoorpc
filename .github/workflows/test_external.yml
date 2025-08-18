@@ -20,7 +20,7 @@ jobs:
     container:
       image: odoo:17.0
       options: >-
-        --user=1000:1000
+        --user=0:0
         --network-alias=odoo
 
     env:
@@ -33,6 +33,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Fix perms for non-root
+        run: |
+          chown -R odoo:odoo "$GITHUB_WORKSPACE" /var/lib/odoo || true
+      - name: Run tests as odoo user
+        run: |
+          su -s /bin/bash -c 'odoo \
+            --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo \
+            -d odoo -i my_module --test-enable --stop-after-init --without-demo=all' odoo
 
       - name: Export PG bindir to PATH
         run: |
