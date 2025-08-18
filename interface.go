@@ -15,7 +15,7 @@ type Client interface {
 	// Version get metadata version of the server
 	Version(ctx context.Context) (ServerVersion, error)
 	// Authenticate logs in the user and returns its uid.
-	Authenticate(ctx context.Context, username, password string) (int64, error)
+	Authenticate(ctx context.Context, username, password, db string) (int64, error)
 	// SearchRead queries a model and return the fields.
 	SearchRead(ctx context.Context, model string, domain Domain, opts Options) ([]map[string]any, error)
 	// Search queries a model

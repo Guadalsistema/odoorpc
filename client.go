@@ -16,8 +16,8 @@ type RpcClient struct {
 }
 
 // New creates a new RPCClient using the provided url and database name.
-func New(url, db string, httpClient *http.Client) *RpcClient {
-	return &RpcClient{rpc: jsonrpc.New(url, httpClient), db: db}
+func New(url string, httpClient *http.Client) *RpcClient {
+	return &RpcClient{rpc: jsonrpc.New(url, httpClient)}
 }
 
 // Version get metadata call
@@ -35,11 +35,11 @@ func (c *RpcClient) Version(ctx context.Context) (ServerVersion, error) {
 }
 
 // Authenticate logs in the user and returns its uid.
-func (c *RpcClient) Authenticate(ctx context.Context, username, password string) (int64, error) {
+func (c *RpcClient) Authenticate(ctx context.Context, username, password, db string) (int64, error) {
 	params := map[string]any{
 		"service": "common",
 		"method":  "login",
-		"args":    []any{c.db, username, password},
+		"args":    []any{db, username, password},
 	}
 	var uid int64
 	if err := c.rpc.Call(ctx, "call", params, &uid); err != nil {
@@ -47,6 +47,7 @@ func (c *RpcClient) Authenticate(ctx context.Context, username, password string)
 	}
 	c.password = password
 	c.uid = uid
+	c.db = db
 	return uid, nil
 }
 
