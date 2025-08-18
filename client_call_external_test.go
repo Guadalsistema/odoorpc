@@ -9,9 +9,10 @@ import (
 	"github.com/Guadalsistema/odoorpc"
 )
 
-// TestRPCClientCallAgainstOdoo verifies that RPCClient.Call works with a real Odoo server.
-func TestRPCClientCallAgainstOdoo(t *testing.T) {
+// TestRpcClientCallAgainstOdoo verifies that RPCClient.Call works with a real Odoo server.
+func TestRpcClientCallAgainstOdoo(t *testing.T) {
 	ctx := context.Background()
+	c := odoo.New("https://127.0.0.1", "odoo", nil)
 	resp, err := c.Version(ctx)
 	if err != nil {
 		t.Logf("logs:\n%s", logBuf.String())
@@ -23,7 +24,8 @@ func TestRPCClientCallAgainstOdoo(t *testing.T) {
 	}
 
 	domain := odoorpc.NewDomain()
-	res, err := c.SearchRead(ctx, "res.users", domain, odoorpc.Options.SetFields("name"))
+	opts := odoorpc.Options{Fields: []String{"name"}}
+	res, err := c.SearchRead(ctx, "res.users", domain, opts)
 	if err != nil {
 		t.Logf("logs:\n%s", logBuf.String())
 		t.Fatalf("Call: %v", err)

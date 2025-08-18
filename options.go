@@ -19,16 +19,6 @@ func toSnakeCase(in string) (out string) {
 	return string(result)
 }
 
-func (opt Options) SetLimit(i int) Options {
-	opt.Limit = i
-	return opt
-}
-
-func (opt Options) SetFields(args ...string) Options {
-	opt.Fields = args
-	return opt
-}
-
 func (opt Options) Kwargs() map[string]any {
 	kwargs := make(map[string]any)
 	v := reflect.ValueOf(opt)
