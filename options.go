@@ -1,10 +1,14 @@
 package odoorpc
 
-import "reflect"
+import (
+	"reflect"
+	"unicode"
+)
 
 type Options struct {
 	Limit  int
 	Fields []string
+	Order  string
 }
 
 func toSnakeCase(in string) (out string) {
@@ -13,7 +17,7 @@ func toSnakeCase(in string) (out string) {
 		if i > 0 && r >= 'A' && r <= 'Z' {
 			result = append(result, '_', r+32)
 		} else {
-			result = append(result, r)
+			result = append(result, unicode.ToLower(r))
 		}
 	}
 	return string(result)
@@ -33,6 +37,10 @@ func (opt Options) Kwargs() map[string]any {
 			}
 		case []string:
 			if len(fieldValue) > 0 {
+				kwargs[fieldName] = fieldValue
+			}
+		case string:
+			if fieldValue != "" {
 				kwargs[fieldName] = fieldValue
 			}
 		}
