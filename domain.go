@@ -15,6 +15,21 @@ func (d Domain) Equals(field string, value any) Domain {
 	return append(d, []any{field, "=", value})
 }
 
+// NotEquals appends an not equality condition to the domain.
+func (d Domain) NotEquals(field string, value any) Domain {
+	return append(d, []any{field, "!=", value})
+}
+
+// Like appends an match condition %value% to the domain.
+func (d Domain) Like(field string, value string) Domain {
+	return append(d, []any{field, "like", value})
+}
+
+// Like appends an non-casesensitive match condition %value% to the domain.
+func (d Domain) Ilike(field string, value string) Domain {
+	return append(d, []any{field, "ilike", value})
+}
+
 // In appends an "in" condition for a slice of int64 values.
 func (d Domain) In(field string, values []int64) Domain {
 	vals := make([]any, len(values))
