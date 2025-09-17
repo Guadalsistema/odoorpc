@@ -84,7 +84,7 @@ type Client interface {
 	// Unlink removes records from a model.
 	Unlink(ctx context.Context, model string, ids []int64) (bool, error)
 	// FieldsGet retrieves metadata for fields of a model.
-	FieldsGet(ctx context.Context, model string, fields []string) (map[string]any, error)
+	FieldsGet(ctx context.Context, model string, fields []string, opts Options) (map[string]any, error)
 	// CallMethod model method
 	CallMethod(ctx context.Context, model, method string, vars []any, opts Options) ([]any, error)
 	// Read method

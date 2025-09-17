@@ -20,6 +20,26 @@ func (d Domain) NotEquals(field string, value any) Domain {
 	return append(d, []any{field, "!=", value})
 }
 
+// LessThan appends a "<" condition to the domain.
+func (d Domain) LessThan(field string, value any) Domain {
+	return append(d, []any{field, "<", value})
+}
+
+// GreaterThan appends a ">" condition to the domain.
+func (d Domain) GreaterThan(field string, value any) Domain {
+	return append(d, []any{field, ">", value})
+}
+
+// LessThanOrEqual appends a "<=" condition to the domain.
+func (d Domain) LessThanOrEqual(field string, value any) Domain {
+	return append(d, []any{field, "<=", value})
+}
+
+// GreaterThanOrEqual appends a ">=" condition to the domain.
+func (d Domain) GreaterThanOrEqual(field string, value any) Domain {
+	return append(d, []any{field, ">=", value})
+}
+
 // Like appends an match condition %value% to the domain.
 func (d Domain) Like(field string, value string) Domain {
 	return append(d, []any{field, "like", value})

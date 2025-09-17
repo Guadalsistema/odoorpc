@@ -104,7 +104,7 @@ func (c *RpcClient) SearchRead(ctx context.Context, model string, domain Domain,
 //
 // It wraps the `fields_get` RPC method, returning a map whose keys are the
 // field names and values contain their definitions.
-func (c *RpcClient) FieldsGet(ctx context.Context, model string, fields []string) (map[string]any, error) {
+func (c *RpcClient) FieldsGet(ctx context.Context, model string, fields []string, opts Options) (map[string]any, error) {
 	if fields == nil {
 		fields = []string{}
 	}
@@ -112,7 +112,7 @@ func (c *RpcClient) FieldsGet(ctx context.Context, model string, fields []string
 	params := map[string]any{
 		"service": "object",
 		"method":  "execute_kw",
-		"args":    []any{c.db, c.uid, c.password, model, "fields_get", args, map[string]any{}},
+		"args":    []any{c.db, c.uid, c.password, model, "fields_get", args, opts.Kwargs()},
 	}
 	var res map[string]any
 	if err := c.rpc.Call(ctx, "call", params, &res); err != nil {

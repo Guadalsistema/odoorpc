@@ -38,10 +38,10 @@ func New(endpoint string, httpClient *http.Client) *NetClient {
 }
 
 type request struct {
-	JSONRPC string      `json:"jsonrpc"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params"`
-	ID      uint64      `json:"id"`
+	JSONRPC string `json:"jsonrpc"`
+	Method  string `json:"method"`
+	Params  any    `json:"params"`
+	ID      uint64 `json:"id"`
 }
 
 type rpcError struct {
@@ -58,7 +58,7 @@ type response struct {
 }
 
 // Call performs a JSON-RPC request and decodes the result into result.
-func (c *NetClient) Call(ctx context.Context, method string, params interface{}, result interface{}) error {
+func (c *NetClient) Call(ctx context.Context, method string, params any, result any) error {
 	id := atomic.AddUint64(&c.nextID, 1)
 	reqBody, err := json.Marshal(request{JSONRPC: "2.0", Method: method, Params: params, ID: id})
 	if err != nil {
@@ -78,7 +78,7 @@ func (c *NetClient) Call(ctx context.Context, method string, params interface{},
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf(" failed to read response body: %w", err)
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {

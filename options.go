@@ -6,9 +6,10 @@ import (
 )
 
 type Options struct {
-	Limit  int
-	Fields []string
-	Order  string
+	Limit   int
+	Fields  []string
+	Order   string
+	Context map[string]any
 }
 
 func toSnakeCase(in string) (out string) {
@@ -41,6 +42,10 @@ func (opt Options) Kwargs() map[string]any {
 			}
 		case string:
 			if fieldValue != "" {
+				kwargs[fieldName] = fieldValue
+			}
+		case map[string]any:
+			if len(fieldValue) > 0 {
 				kwargs[fieldName] = fieldValue
 			}
 		}
