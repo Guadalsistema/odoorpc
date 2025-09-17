@@ -18,7 +18,7 @@ func TestAuthenticateAgainstOdoo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Version: %v", err)
 	}
-	if resp.ServerVersionInfo[0].(float64) < 16.0 {
+	if resp.ServerVersionInfo.Major < 16 {
 		t.Fatalf("Unexpected version answer %v", resp.ServerVersion)
 	}
 

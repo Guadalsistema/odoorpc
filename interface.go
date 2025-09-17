@@ -1,13 +1,70 @@
 package odoorpc
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 type ServerVersion struct {
-	ServerVersion string `json:"server_version"`
-	// TODO map it to a struct
-	ServerVersionInfo []any  `json:"server_version_info"`
-	ServerSerie       string `json:"server_serie"`
-	ProtocolVersion   int    `json:"protocol_version"`
+	ServerVersion     string      `json:"server_version"`
+	ServerVersionInfo VersionInfo `json:"server_version_info"`
+	ServerSerie       string      `json:"server_serie"`
+	ProtocolVersion   int         `json:"protocol_version"`
+}
+
+// VersionInfo describes the structured data returned by Odoo's version endpoint.
+type VersionInfo struct {
+	Major        int
+	Minor        int
+	Patch        int
+	ReleaseLevel string
+	Serial       int
+	FullVersion  string
+}
+
+// UnmarshalJSON maps the array returned by Odoo into the VersionInfo struct.
+func (v *VersionInfo) UnmarshalJSON(data []byte) error {
+	var raw []json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	if len(raw) == 0 {
+		*v = VersionInfo{}
+		return nil
+	}
+
+	var info VersionInfo
+	for i, item := range raw {
+		switch i {
+		case 0:
+			if err := json.Unmarshal(item, &info.Major); err != nil {
+				return err
+			}
+		case 1:
+			if err := json.Unmarshal(item, &info.Minor); err != nil {
+				return err
+			}
+		case 2:
+			if err := json.Unmarshal(item, &info.Patch); err != nil {
+				return err
+			}
+		case 3:
+			if err := json.Unmarshal(item, &info.ReleaseLevel); err != nil {
+				return err
+			}
+		case 4:
+			if err := json.Unmarshal(item, &info.Serial); err != nil {
+				return err
+			}
+		case 5:
+			if err := json.Unmarshal(item, &info.FullVersion); err != nil {
+				return err
+			}
+		}
+	}
+
+	*v = info
+	return nil
 }
 
 // Client defines the operations required to interact with Odoo.
