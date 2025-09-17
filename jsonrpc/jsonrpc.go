@@ -62,23 +62,23 @@ func (c *NetClient) Call(ctx context.Context, method string, params interface{},
 	id := atomic.AddUint64(&c.nextID, 1)
 	reqBody, err := json.Marshal(request{JSONRPC: "2.0", Method: method, Params: params, ID: id})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, bytes.NewReader(reqBody))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create HTTP request for %q: %w", method, err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("HTTP request error to %s: %w", c.endpoint, err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf(" failed to read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -94,12 +94,16 @@ func (c *NetClient) Call(ctx context.Context, method string, params interface{},
 		wrapped := fmt.Errorf("jsonrpc decode failed: %w", err)
 		return fmt.Errorf("jsonrpc decode failed: %v; body: %s", wrapped, snippet)
 	}
+
+	// Check for JSON-RPC errors
 	if rpcResp.Error != nil {
 		return fmt.Errorf("jsonrpc error %d: %s", rpcResp.Error.Code, rpcResp.Error.Message)
 	}
+
+	// Unmarshal the result
 	if result != nil {
 		if err := json.Unmarshal(rpcResp.Result, result); err != nil {
-			return err
+			return fmt.Errorf("failed to unmarshal result: %w", err)
 		}
 	}
 	return nil
