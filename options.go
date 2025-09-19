@@ -7,6 +7,7 @@ import (
 
 type Options struct {
 	Limit   int
+	Offset  int
 	Fields  []string
 	Order   string
 	Context map[string]any
