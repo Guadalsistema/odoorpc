@@ -11,6 +11,6 @@ on:
 jobs:
   test_local:
     uses: ./.github/workflows/test_local.yml
-  test_external:
+  test_external_17:
     needs: test_local
     uses: ./.github/workflows/test_external.yml

@@ -37,3 +37,25 @@ func TestAuthenticateReturnsErrorWhenCallFails(t *testing.T) {
 		t.Fatalf("client state should not change on authentication failure")
 	}
 }
+
+func TestAuthenticateAcceptsFloatResponse(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/jsonrpc" {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":1,"result": 5}`))
+	}))
+	defer server.Close()
+
+	client := New(server.URL, server.Client(), nil)
+	uid, err := client.Authenticate(context.Background(), "user", "pass", "db")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if uid != 5 {
+		t.Fatalf("expected uid 5, got %d", uid)
+	}
+}

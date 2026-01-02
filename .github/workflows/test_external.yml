@@ -5,9 +5,12 @@ on:
 
 jobs:
   test:
+    strategy:
+      matrix:
+        odoo_version: ['16.0', '17.0', '18.0']
     runs-on: ubuntu-latest
     container:
-      image: odoo:17.0
+      image: odoo:${{ matrix.odoo_version }}
       options: >-
         --user=0:0
 

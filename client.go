@@ -2,6 +2,7 @@ package odoorpc
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -57,6 +58,14 @@ func (c *RpcClient) Authenticate(ctx context.Context, username, password, db str
 	switch v := ret.(type) {
 	case int64:
 		uid = v
+	case float64:
+		uid = int64(v)
+	case json.Number:
+		parsed, err := v.Int64()
+		if err != nil {
+			return 0, ErrInvalidAuthResponse
+		}
+		uid = parsed
 	default:
 		return 0, ErrInvalidAuthResponse
 	}
