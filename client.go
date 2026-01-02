@@ -2,6 +2,7 @@ package odoorpc
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/Guadalsistema/odoorpc/jsonrpc"
@@ -9,6 +10,7 @@ import (
 
 // RpcClient implements the Client interface using the JSON-RPC API.
 type RpcClient struct {
+	logger   *slog.Logger
 	rpc      *jsonrpc.NetClient
 	db       string
 	uid      int64
@@ -16,8 +18,8 @@ type RpcClient struct {
 }
 
 // New creates a new RPCClient using the provided url and database name.
-func New(url string, httpClient *http.Client) *RpcClient {
-	return &RpcClient{rpc: jsonrpc.New(url, httpClient)}
+func New(url string, httpClient *http.Client, logger *slog.Logger) *RpcClient {
+	return &RpcClient{rpc: jsonrpc.New(url, httpClient), logger: logger}
 }
 
 // Version get metadata call
@@ -41,10 +43,24 @@ func (c *RpcClient) Authenticate(ctx context.Context, username, password, db str
 		"method":  "login",
 		"args":    []any{db, username, password},
 	}
-	var uid int64
-	if err := c.rpc.Call(ctx, "call", params, &uid); err != nil {
+
+	var ret any
+	if err := c.rpc.Call(ctx, "call", params, &ret); err != nil {
 		return 0, err
 	}
+
+	if c.logger != nil && c.logger.Enabled(ctx, slog.LevelDebug) {
+		c.logger.DebugContext(ctx, "Authentication response", "response", ret)
+	}
+
+	var uid int64
+	switch v := ret.(type) {
+	case int64:
+		uid = v
+	default:
+		return 0, ErrInvalidAuthResponse
+	}
+
 	c.password = password
 	c.uid = uid
 	c.db = db
