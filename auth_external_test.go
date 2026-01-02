@@ -11,7 +11,7 @@ import (
 
 // TestAuthenticateAgainstOdoo validates that admin authentication works against a local Odoo instance.
 func TestAuthenticateAgainstOdoo(t *testing.T) {
-	c := odoorpc.New("http://127.0.0.1:8069", nil)
+	c := odoorpc.New("http://127.0.0.1:8069", nil, nil)
 	ctx := context.Background()
 
 	resp, err := c.Version(ctx)

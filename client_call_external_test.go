@@ -12,7 +12,7 @@ import (
 // TestRpcClientCallAgainstOdoo verifies that RpcClient.Call works with a real Odoo server.
 func TestRpcClientCallAgainstOdoo(t *testing.T) {
 	ctx := context.Background()
-	c := odoorpc.New("http://127.0.0.1:8069", nil)
+	c := odoorpc.New("http://127.0.0.1:8069", nil, nil)
 
 	_, err := c.Version(ctx)
 	if err != nil {
