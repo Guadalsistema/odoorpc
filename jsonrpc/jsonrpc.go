@@ -97,7 +97,11 @@ func (c *NetClient) Call(ctx context.Context, method string, params any, result 
 
 	// Check for JSON-RPC errors
 	if rpcResp.Error != nil {
-		return fmt.Errorf("jsonrpc error %d: %s", rpcResp.Error.Code, rpcResp.Error.Message)
+		data, err := json.Marshal(rpcResp.Error.Data)
+		if err != nil {
+			return fmt.Errorf("jsonrpc error %d: %s (failed to marshal error data: %v)", rpcResp.Error.Code, rpcResp.Error.Message, err)
+		}
+		return fmt.Errorf("jsonrpc error %d: %s - %s", rpcResp.Error.Code, rpcResp.Error.Message, string(data))
 	}
 
 	// Unmarshal the result
