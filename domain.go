@@ -53,6 +53,44 @@ func domainFromExpr(expr []any) Domain {
 	return Domain{expr}
 }
 
+func flattenDomainList(domain Domain) Domain {
+	if len(domain) == 0 {
+		return Domain{}
+	}
+	flat := Domain{}
+	for _, item := range domain {
+		flat = append(flat, flattenDomainItem(item)...)
+	}
+	return flat
+}
+
+func flattenDomainItem(item any) Domain {
+	expr, ok := item.([]any)
+	if !ok {
+		return Domain{item}
+	}
+	if len(expr) == 0 {
+		return Domain{}
+	}
+	if isLogicalOperator(expr[0]) {
+		flat := Domain{}
+		for _, sub := range expr {
+			flat = append(flat, flattenDomainItem(sub)...)
+		}
+		return flat
+	}
+	if len(expr) == 3 {
+		if _, ok := expr[0].(string); ok {
+			return Domain{expr}
+		}
+	}
+	flat := Domain{}
+	for _, sub := range expr {
+		flat = append(flat, flattenDomainItem(sub)...)
+	}
+	return flat
+}
+
 // Equals appends an equality condition to the domain.
 func (d Domain) Equals(field string, value any) Domain {
 	return append(d, []any{field, "=", value})
@@ -112,23 +150,11 @@ func (d Domain) And(domains ...Domain) Domain {
 	if len(domains) == 0 {
 		return d
 	}
-	var exprs [][]any
-	if expr, ok := d.expression(); ok {
-		exprs = append(exprs, expr)
-	}
+	result := flattenDomainList(d)
 	for _, other := range domains {
-		if expr, ok := other.expression(); ok {
-			exprs = append(exprs, expr)
-		}
+		result = append(result, flattenDomainList(other)...)
 	}
-	if len(exprs) == 0 {
-		return Domain{}
-	}
-	result := exprs[0]
-	for _, expr := range exprs[1:] {
-		result = []any{"&", result, expr}
-	}
-	return domainFromExpr(result)
+	return result
 }
 
 // Or combines the current domain with the provided ones using logical OR.
@@ -148,9 +174,15 @@ func (d Domain) Or(domains ...Domain) Domain {
 	if len(exprs) == 0 {
 		return Domain{}
 	}
-	result := exprs[0]
-	for _, expr := range exprs[1:] {
-		result = []any{"|", result, expr}
+	if len(exprs) == 1 {
+		return flattenDomainItem(exprs[0])
 	}
-	return domainFromExpr(result)
+	result := Domain{}
+	for i := 0; i < len(exprs)-1; i++ {
+		result = append(result, "|")
+	}
+	for _, expr := range exprs {
+		result = append(result, flattenDomainItem(expr)...)
+	}
+	return result
 }

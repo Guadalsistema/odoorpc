@@ -36,13 +36,32 @@ func TestDomainAnd(t *testing.T) {
 		Equals("active", true)
 	right := odoorpc.NewDomain().GreaterThan("age", 18)
 	got := left.And(right)
-	want := []any{
+	want := odoorpc.Domain{
+		[]any{"name", "=", "test"},
+		[]any{"active", "=", true},
+		[]any{"age", ">", 18},
+	}
+	if !reflect.DeepEqual([]any(got), []any(want)) {
+		t.Fatalf("unexpected And domain: %#v", got)
+	}
+}
+
+func TestDomainAndFlattensNested(t *testing.T) {
+	nested := odoorpc.Domain{
 		"&",
 		[]any{"&", []any{"name", "=", "test"}, []any{"active", "=", true}},
 		[]any{"age", ">", 18},
 	}
+	got := odoorpc.NewDomain().And(nested)
+	want := []any{
+		"&",
+		"&",
+		[]any{"name", "=", "test"},
+		[]any{"active", "=", true},
+		[]any{"age", ">", 18},
+	}
 	if !reflect.DeepEqual([]any(got), want) {
-		t.Fatalf("unexpected And domain: %#v", got)
+		t.Fatalf("unexpected flattened And domain: %#v", got)
 	}
 }
 
@@ -53,7 +72,9 @@ func TestDomainOr(t *testing.T) {
 	got := left.Or(right, third)
 	want := []any{
 		"|",
-		[]any{"|", []any{"name", "=", "test"}, []any{"email", "=", "test@example.com"}},
+		"|",
+		[]any{"name", "=", "test"},
+		[]any{"email", "=", "test@example.com"},
 		[]any{"score", ">=", 80},
 	}
 	if !reflect.DeepEqual([]any(got), want) {
