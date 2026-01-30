@@ -43,16 +43,6 @@ func (d Domain) expression() ([]any, bool) {
 	return expr, true
 }
 
-func domainFromExpr(expr []any) Domain {
-	if len(expr) == 0 {
-		return Domain{}
-	}
-	if isLogicalOperator(expr[0]) {
-		return Domain(expr)
-	}
-	return Domain{expr}
-}
-
 func flattenDomainList(domain Domain) Domain {
 	if len(domain) == 0 {
 		return Domain{}
@@ -89,6 +79,11 @@ func flattenDomainItem(item any) Domain {
 		flat = append(flat, flattenDomainItem(sub)...)
 	}
 	return flat
+}
+
+// Op assign any operator expresion
+func (d Domain) Op(field string, op string, value any) Domain {
+	return append(d, []any{field, op, value})
 }
 
 // Equals appends an equality condition to the domain.
