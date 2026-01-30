@@ -57,6 +57,48 @@ type response struct {
 	ID      uint64          `json:"id"`
 }
 
+// OdooError represents an error response from Odoo server (embedded in result)
+type odooError struct {
+	Code    int                    `json:"code"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
+}
+
+// OdooServerResponse represents a response from Odoo server that may contain nested errors
+type odooServerResponse struct {
+	JSONRPC string      `json:"jsonrpc"`
+	ID      interface{} `json:"id"`
+	Error   *odooError  `json:"error"`
+	Result  interface{} `json:"result"`
+}
+
+func (e *odooError) Error() string {
+	return fmt.Sprintf("odoo error %d: %s", e.Code, e.Message)
+}
+
+func newOdooError(code int, message string, data map[string]interface{}) error {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+
+	// Extract exception type from data if available
+	exceptionType, hasType := data["name"].(string)
+	if hasType {
+		switch exceptionType {
+		case "odoo.exceptions.ValidationError":
+			return fmt.Errorf("odoo validation error %d: %s - %v", code, message, data)
+		case "odoo.exceptions.AccessError":
+			return fmt.Errorf("odoo access error %d: %s - %v", code, message, data)
+		case "odoo.exceptions.UserError":
+			return fmt.Errorf("odoo user error %d: %s - %v", code, message, data)
+		default:
+			return fmt.Errorf("odoo error %d: %s - %v", code, message, data)
+		}
+	}
+
+	return fmt.Errorf("odoo error %d: %s - %v", code, message, data)
+}
+
 // Call performs a JSON-RPC request and decodes the result into result.
 func (c *NetClient) Call(ctx context.Context, method string, params any, result any) error {
 	id := atomic.AddUint64(&c.nextID, 1)
@@ -104,8 +146,16 @@ func (c *NetClient) Call(ctx context.Context, method string, params any, result 
 		return fmt.Errorf("jsonrpc error %d: %s - %s", rpcResp.Error.Code, rpcResp.Error.Message, string(data))
 	}
 
-	// Unmarshal the result
+	// Check for nested Odoo errors in result payload
 	if result != nil {
+		// First, try to detect if the result contains an embedded Odoo error response
+		var odooResp odooServerResponse
+		if err := json.Unmarshal(rpcResp.Result, &odooResp); err == nil && odooResp.Error != nil {
+			// Found nested Odoo error - convert to proper Go error
+			return newOdooError(odooResp.Error.Code, odooResp.Error.Message, odooResp.Error.Data)
+		}
+
+		// Normal result processing
 		if err := json.Unmarshal(rpcResp.Result, result); err != nil {
 			return fmt.Errorf("failed to unmarshal result: %w", err)
 		}
